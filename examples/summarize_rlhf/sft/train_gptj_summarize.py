@@ -12,7 +12,7 @@ from transformers import (
     default_data_collator,
 )
 
-from peft import LoraConfig
+from peft import LoraConfig, get_peft_model
 
 def set_seed(seed_val=42):
     random.seed(seed_val)
@@ -104,12 +104,13 @@ if __name__ == "__main__":
         task_type="CAUSAL_LM",
     )
 
+    model = get_peft_model(model, lora_config)
+
     trainer = Trainer(
         model=model,
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=dev_dataset,
-        peft_config=lora_config,
         compute_metrics=compute_metrics,
         data_collator=default_data_collator,
         preprocess_logits_for_metrics=preprocess_logits_for_metrics,
