@@ -12,6 +12,7 @@ from transformers import (
     default_data_collator,
 )
 
+from peft import LoraConfig
 
 def set_seed(seed_val=42):
     random.seed(seed_val)
@@ -95,11 +96,20 @@ if __name__ == "__main__":
         deepspeed="./ds_config_gptj.json",
     )
 
+    lora_config = LoraConfig(
+        r=16,
+        lora_alpha=32,
+        lora_dropout=0.05,
+        bias="none",
+        task_type="CAUSAL_LM",
+    )
+
     trainer = Trainer(
         model=model,
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=dev_dataset,
+        peft_config=lora_config,
         compute_metrics=compute_metrics,
         data_collator=default_data_collator,
         preprocess_logits_for_metrics=preprocess_logits_for_metrics,
