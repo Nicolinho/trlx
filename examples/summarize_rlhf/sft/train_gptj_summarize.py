@@ -23,7 +23,7 @@ def set_seed(seed_val=42):
 
 if __name__ == "__main__":
     output_dir = "gptj-supervised-summarize-checkpoint"
-    train_batch_size = 16
+    train_batch_size = 4
     gradient_accumulation_steps = 1
     learning_rate = 1e-5
     eval_batch_size = 1
@@ -107,6 +107,8 @@ if __name__ == "__main__":
     model = prepare_model_for_int8_training(model)
 
     model = get_peft_model(model, lora_config)
+
+    model.print_trainable_parameters()
 
     trainer = Trainer(
         model=model,
