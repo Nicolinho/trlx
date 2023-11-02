@@ -13,6 +13,7 @@ from transformers import (
 )
 
 from peft import LoraConfig, get_peft_model, prepare_model_for_int8_training
+from accelerate import Accelerator
 
 def set_seed(seed_val=42):
     random.seed(seed_val)
@@ -36,14 +37,24 @@ if __name__ == "__main__":
     device_map={'':torch.cuda.current_device()}
 #    device_map={'':torch.cuda.current_device()} or device_map={'':torch.xpu.current_device()}
 #    device_map="auto"
-    from accelerate import Accelerator
+
+
+
+    lora_config = LoraConfig(
+        r=16,
+        lora_alpha=32,
+        lora_dropout=0.05,
+        bias="none",
+        task_type="CAUSAL_LM",
+    )
 
     device_index = Accelerator().process_index
     device_map = {"": device_index}
 
     tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-j-6B")
     model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-j-6B", use_cache=False,
-                                                 load_in_8bit=True, device_map=device_map, torch_dtype = torch.bfloat16)
+                                                 load_in_8bit=True, device_map=device_map, torch_dtype = torch.bfloat16,
+                                                 peft_config=lora_config)
     tokenizer.pad_token = tokenizer.eos_token
     model.resize_token_embeddings(len(tokenizer))
     tokenizer.pad_token_id = tokenizer.eos_token_id
@@ -104,14 +115,6 @@ if __name__ == "__main__":
         load_best_model_at_end=True,
         logging_steps=50,
 #        deepspeed="./ds_config_gptj.json",
-    )
-
-    lora_config = LoraConfig(
-        r=16,
-        lora_alpha=32,
-        lora_dropout=0.05,
-        bias="none",
-        task_type="CAUSAL_LM",
     )
 
     model = prepare_model_for_int8_training(model)
