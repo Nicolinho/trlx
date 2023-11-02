@@ -12,7 +12,7 @@ from transformers import (
     default_data_collator,
 )
 
-from peft import LoraConfig, get_peft_model
+from peft import LoraConfig, get_peft_model, prepare_model_for_int8_training
 
 def set_seed(seed_val=42):
     random.seed(seed_val)
@@ -103,6 +103,8 @@ if __name__ == "__main__":
         bias="none",
         task_type="CAUSAL_LM",
     )
+
+    model = prepare_model_for_int8_training(model)
 
     model = get_peft_model(model, lora_config)
 
