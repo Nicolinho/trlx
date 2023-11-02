@@ -53,8 +53,7 @@ if __name__ == "__main__":
 
     tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-j-6B")
     model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-j-6B", use_cache=False,
-                                                 load_in_8bit=True, device_map=device_map, torch_dtype = torch.bfloat16,
-                                                 peft_config=lora_config)
+                                                 load_in_8bit=True, device_map=device_map, torch_dtype = torch.bfloat16)
     tokenizer.pad_token = tokenizer.eos_token
     model.resize_token_embeddings(len(tokenizer))
     tokenizer.pad_token_id = tokenizer.eos_token_id
