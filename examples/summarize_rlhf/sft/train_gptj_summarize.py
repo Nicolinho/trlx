@@ -23,7 +23,7 @@ def set_seed(seed_val=42):
 
 if __name__ == "__main__":
     output_dir = "gptj-supervised-summarize-checkpoint"
-    train_batch_size = 4
+    train_batch_size = 1
     gradient_accumulation_steps = 1
     learning_rate = 1e-5
     eval_batch_size = 1
@@ -33,9 +33,17 @@ if __name__ == "__main__":
     num_train_epochs = 5
     random.seed(42)
 
+    device_map={'':torch.cuda.current_device()}
+#    device_map={'':torch.cuda.current_device()} or device_map={'':torch.xpu.current_device()}
+#    device_map="auto"
+    from accelerate import Accelerator
+
+    device_index = Accelerator().process_index
+    device_map = {"": device_index}
+
     tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-j-6B")
     model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-j-6B", use_cache=False,
-                                                 load_in_8bit=True)
+                                                 load_in_8bit=True, device_map=device_map, torch_dtype = torch.bfloat16)
     tokenizer.pad_token = tokenizer.eos_token
     model.resize_token_embeddings(len(tokenizer))
     tokenizer.pad_token_id = tokenizer.eos_token_id
@@ -50,6 +58,7 @@ if __name__ == "__main__":
         "train",
         max_length=max_input_length,
     )
+#    train_dataset = train_dataset.map(num_proc=2)
     dev_dataset = TLDRDataset(
         data_path,
         tokenizer,
@@ -84,7 +93,7 @@ if __name__ == "__main__":
         per_device_eval_batch_size=eval_batch_size,
         gradient_checkpointing=True,
         half_precision_backend=True,
-        fp16=True,
+#        fp16=True,
         adam_beta1=0.9,
         adam_beta2=0.95,
         gradient_accumulation_steps=gradient_accumulation_steps,
@@ -94,7 +103,7 @@ if __name__ == "__main__":
         save_steps=save_steps,
         load_best_model_at_end=True,
         logging_steps=50,
-        deepspeed="./ds_config_gptj.json",
+#        deepspeed="./ds_config_gptj.json",
     )
 
     lora_config = LoraConfig(
@@ -110,7 +119,7 @@ if __name__ == "__main__":
     model = get_peft_model(model, lora_config)
 
     model.print_trainable_parameters()
-
+    print(model)
     trainer = Trainer(
         model=model,
         args=training_args,
