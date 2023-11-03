@@ -24,7 +24,7 @@ def set_seed(seed_val=42):
 
 if __name__ == "__main__":
     output_dir = "gptj-supervised-summarize-checkpoint"
-    train_batch_size = 1
+    train_batch_size = 16
     gradient_accumulation_steps = 1
     learning_rate = 1e-5
     eval_batch_size = 1
@@ -51,8 +51,10 @@ if __name__ == "__main__":
     device_index = Accelerator().process_index
     device_map = {"": device_index}
 
-    tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-j-6B")
-    model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-j-6B", use_cache=False,
+    model_name = ['facebook/opt-350m', "EleutherAI/gpt-j-6B"][0]
+
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForCausalLM.from_pretrained(model_name, use_cache=False,
                                                  load_in_8bit=True, device_map=device_map, torch_dtype = torch.bfloat16)
     tokenizer.pad_token = tokenizer.eos_token
     model.resize_token_embeddings(len(tokenizer))
@@ -116,7 +118,7 @@ if __name__ == "__main__":
 #        deepspeed="./ds_config_gptj.json",
     )
 
-    model = prepare_model_for_int8_training(model)
+#    model = prepare_model_for_int8_training(model) # this gives an error in distributed setting
 
     model = get_peft_model(model, lora_config)
 
