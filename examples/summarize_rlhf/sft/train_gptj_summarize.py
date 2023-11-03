@@ -57,13 +57,29 @@ if __name__ == "__main__":
     model_name = ['facebook/opt-350m', "EleutherAI/gpt-j-6B"][0]
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForCausalLM.from_pretrained(model_name, use_cache=False,
-                                                 load_in_8bit=True, device_map=device_map, torch_dtype = torch.bfloat16)
+
+    # model = AutoModelForCausalLM.from_pretrained(model_name, use_cache=False,
+    #                                              load_in_8bit=True, device_map=device_map, torch_dtype = torch.bfloat16)
+    # model.resize_token_embeddings(len(tokenizer))
+    # model.config.end_token_id = tokenizer.eos_token_id
+    # model.config.pad_token_id = model.config.eos_token_id
+    # model = get_peft_model(model, lora_config)
+
+
     tokenizer.pad_token = tokenizer.eos_token
-    model.resize_token_embeddings(len(tokenizer))
     tokenizer.pad_token_id = tokenizer.eos_token_id
-    model.config.end_token_id = tokenizer.eos_token_id
-    model.config.pad_token_id = model.config.eos_token_id
+
+
+
+    # model_init fct needed for hyperparam search
+    def model_init(trial):
+        model = AutoModelForCausalLM.from_pretrained(model_name, use_cache=False,
+                                                 load_in_8bit=True, device_map=device_map, torch_dtype = torch.bfloat16)
+        model.resize_token_embeddings(len(tokenizer))
+        model.config.end_token_id = tokenizer.eos_token_id
+        model.config.pad_token_id = model.config.eos_token_id
+        model = get_peft_model(model, lora_config)
+        return model
 
     # Set up the datasets
     data_path = "CarperAI/openai_summarize_tldr"
@@ -125,12 +141,14 @@ if __name__ == "__main__":
 
 #    model = prepare_model_for_int8_training(model) # this gives an error in distributed setting
 
-    model = get_peft_model(model, lora_config)
 
-    model.print_trainable_parameters()
-    print(model)
+
+    # model.print_trainable_parameters()
+    # print(model)
     trainer = Trainer(
-        model=model,
+        # model=model,
+        model=None,
+        model_init=model_init,
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=dev_dataset,
