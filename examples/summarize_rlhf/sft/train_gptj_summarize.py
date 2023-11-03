@@ -12,8 +12,11 @@ from transformers import (
     default_data_collator,
 )
 
+import datasets
 from peft import LoraConfig, get_peft_model, prepare_model_for_int8_training
 from accelerate import Accelerator
+
+from ray import tune
 
 def set_seed(seed_val=42):
     random.seed(seed_val)
@@ -67,14 +70,16 @@ if __name__ == "__main__":
     train_dataset = TLDRDataset(
         data_path,
         tokenizer,
-        "train",
+        # "train",
+        split='train[50%:52%]',
         max_length=max_input_length,
     )
 #    train_dataset = train_dataset.map(num_proc=2)
     dev_dataset = TLDRDataset(
         data_path,
         tokenizer,
-        "valid",
+        # "valid",
+        split='valid[50%:52%]',
         max_length=max_input_length,
     )
 
@@ -133,5 +138,22 @@ if __name__ == "__main__":
         data_collator=default_data_collator,
         preprocess_logits_for_metrics=preprocess_logits_for_metrics,
     )
-    trainer.train()
-    trainer.save_model(output_dir)
+
+    #hperparameter optimization stuff
+    def ray_hp_space(trial):
+        return {
+            "learning_rate": tune.loguniform(1e-6, 1e-4),
+            "per_device_train_batch_size": tune.choice([ 4, 8, 16]),
+        }
+
+    best_trial = trainer.hyperparameter_search(
+        direction="maximize",
+        backend="ray",
+        hp_space=ray_hp_space,
+        n_trials=8,
+        # compute_objective=compute_objective,
+    )
+
+    #
+    # trainer.train()
+    # trainer.save_model(output_dir)
