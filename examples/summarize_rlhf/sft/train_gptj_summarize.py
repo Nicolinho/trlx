@@ -27,8 +27,8 @@ def set_seed(seed_val=42):
 
 if __name__ == "__main__":
     output_dir = "gptj-supervised-summarize-checkpoint"
-    train_batch_size = 16
-    gradient_accumulation_steps = 1
+    train_batch_size = 8
+    gradient_accumulation_steps = 4
     learning_rate = 1e-5
     eval_batch_size = 1
     eval_steps = 500
@@ -81,7 +81,7 @@ if __name__ == "__main__":
         if trial_param is not None:
             lora_config = LoraConfig(
                 r=trial_param["lora_r"],
-                lora_alpha=32,
+                lora_alpha=trial_param["lora_alpha"],
                 lora_dropout=trial_param["lora_dropout"],
                 bias="none",
                 task_type="CAUSAL_LM",
@@ -106,7 +106,7 @@ if __name__ == "__main__":
         data_path,
         tokenizer,
         # "train",
-        split='train[50%:52%]',
+        split='train[40%:60%]',
         max_length=max_input_length,
     )
 #    train_dataset = train_dataset.map(num_proc=2)
@@ -114,7 +114,7 @@ if __name__ == "__main__":
         data_path,
         tokenizer,
         # "valid",
-        split='valid[50%:52%]',
+        split='valid[40%:60%]',
         max_length=max_input_length,
     )
 
@@ -181,17 +181,20 @@ if __name__ == "__main__":
         return {
             # "learning_rate": tune.loguniform(1e-6, 1e-4),
             # "per_device_train_batch_size": tune.choice([ 4, 8, 16]),
-            "lora_dropout": tune.loguniform(0.01, 0.5),
-            "lora_r": tune.choice([8, 16]),
+            "lora_dropout": tune.loguniform(0., 0.5),
+            "lora_r": tune.choice([8, 16, 32]),
+            "lora_alpha": tune.choice([16, 32, 64]),
         }
 
     best_trial = trainer.hyperparameter_search(
-        direction="maximize",
+        direction="minimize",
         backend="ray",
         hp_space=ray_hp_space,
-        n_trials=2,
+        n_trials=20,
         # compute_objective=compute_objective,
     )
+
+    print(best_trial)
 
     #
     # trainer.train()
