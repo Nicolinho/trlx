@@ -103,7 +103,7 @@ if __name__ == "__main__":
         learning_rate=learning_rate,
         per_device_train_batch_size=train_batch_size,
         per_device_eval_batch_size=eval_batch_size,
-        gradient_checkpointing=True,
+#        gradient_checkpointing=True,
         half_precision_backend=True,
 #        fp16=True,
         adam_beta1=0.9,
