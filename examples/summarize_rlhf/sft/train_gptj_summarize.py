@@ -72,13 +72,32 @@ if __name__ == "__main__":
 
 
     # model_init fct needed for hyperparam search
-    def model_init(trial):
+    def model_init(trial_param):
         model = AutoModelForCausalLM.from_pretrained(model_name, use_cache=False,
                                                  load_in_8bit=True, device_map=device_map, torch_dtype = torch.bfloat16)
         model.resize_token_embeddings(len(tokenizer))
         model.config.end_token_id = tokenizer.eos_token_id
         model.config.pad_token_id = model.config.eos_token_id
+        if trial_param is not None:
+            lora_config = LoraConfig(
+                r=trial_param["lora_r"],
+                lora_alpha=32,
+                lora_dropout=trial_param["lora_dropout"],
+                bias="none",
+                task_type="CAUSAL_LM",
+            )
+        else:
+            lora_config = LoraConfig(
+                r=16,
+                lora_alpha=32,
+                lora_dropout=0.05,
+                bias="none",
+                task_type="CAUSAL_LM",
+            )
         model = get_peft_model(model, lora_config)
+        print("#"*30)
+        print("Init model with following trial_param: ")
+        print(trial_param)
         return model
 
     # Set up the datasets
@@ -160,15 +179,17 @@ if __name__ == "__main__":
     #hperparameter optimization stuff
     def ray_hp_space(trial):
         return {
-            "learning_rate": tune.loguniform(1e-6, 1e-4),
-            "per_device_train_batch_size": tune.choice([ 4, 8, 16]),
+            # "learning_rate": tune.loguniform(1e-6, 1e-4),
+            # "per_device_train_batch_size": tune.choice([ 4, 8, 16]),
+            "lora_dropout": tune.loguniform(0.01, 0.5),
+            "lora_r": tune.choice([8, 16]),
         }
 
     best_trial = trainer.hyperparameter_search(
         direction="maximize",
         backend="ray",
         hp_space=ray_hp_space,
-        n_trials=8,
+        n_trials=2,
         # compute_objective=compute_objective,
     )
 
