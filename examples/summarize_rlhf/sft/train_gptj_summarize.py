@@ -181,7 +181,7 @@ if __name__ == "__main__":
         return {
             # "learning_rate": tune.loguniform(1e-6, 1e-4),
             # "per_device_train_batch_size": tune.choice([ 4, 8, 16]),
-            "lora_dropout": tune.loguniform(0., 0.5),
+            "lora_dropout": tune.loguniform(0.01, 0.5),
             "lora_r": tune.choice([8, 16, 32]),
             "lora_alpha": tune.choice([16, 32, 64]),
         }
