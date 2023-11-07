@@ -58,12 +58,12 @@ if __name__ == "__main__":
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-    # model = AutoModelForCausalLM.from_pretrained(model_name, use_cache=False,
-    #                                              load_in_8bit=True, device_map=device_map, torch_dtype = torch.bfloat16)
-    # model.resize_token_embeddings(len(tokenizer))
-    # model.config.end_token_id = tokenizer.eos_token_id
-    # model.config.pad_token_id = model.config.eos_token_id
-    # model = get_peft_model(model, lora_config)
+    model = AutoModelForCausalLM.from_pretrained(model_name, use_cache=False,
+                                                 load_in_8bit=True, device_map=device_map, torch_dtype = torch.bfloat16)
+    model.resize_token_embeddings(len(tokenizer))
+    model.config.end_token_id = tokenizer.eos_token_id
+    model.config.pad_token_id = model.config.eos_token_id
+    model = get_peft_model(model, lora_config)
 
 
     tokenizer.pad_token = tokenizer.eos_token
@@ -106,7 +106,7 @@ if __name__ == "__main__":
         data_path,
         tokenizer,
         # "train",
-        split='train[40%:60%]',
+        split='train[40%:41%]',
         max_length=max_input_length,
     )
 #    train_dataset = train_dataset.map(num_proc=2)
@@ -114,7 +114,7 @@ if __name__ == "__main__":
         data_path,
         tokenizer,
         # "valid",
-        split='valid[40%:60%]',
+        split='valid[40%:41%]',
         max_length=max_input_length,
     )
 
@@ -186,16 +186,16 @@ if __name__ == "__main__":
             "lora_alpha": tune.choice([16, 32, 64]),
         }
 
-    best_trial = trainer.hyperparameter_search(
-        direction="minimize",
-        backend="ray",
-        hp_space=ray_hp_space,
-        n_trials=20,
-        # compute_objective=compute_objective,
-    )
-
-    print(best_trial)
+    # best_trial = trainer.hyperparameter_search(
+    #     direction="minimize",
+    #     backend="ray",
+    #     hp_space=ray_hp_space,
+    #     n_trials=20,
+    #     # compute_objective=compute_objective,
+    # )
+    #
+    # print(best_trial)
 
     #
-    # trainer.train()
+    trainer.train()
     # trainer.save_model(output_dir)
