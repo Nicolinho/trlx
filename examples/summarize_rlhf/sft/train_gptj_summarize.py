@@ -165,9 +165,9 @@ if __name__ == "__main__":
     # model.print_trainable_parameters()
     # print(model)
     trainer = Trainer(
-        # model=model,
-        model=None,
-        model_init=model_init,
+        model=model,
+        # model=None,
+        # model_init=model_init,
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=dev_dataset,
