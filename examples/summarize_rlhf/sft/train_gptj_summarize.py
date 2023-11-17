@@ -36,7 +36,7 @@ if __name__ == "__main__":
     learning_rate = 1e-5
     eval_batch_size = 1
     eval_steps = 500
-    max_input_length = 550
+    max_input_length = 256 #550
     save_steps = 1000
     num_train_epochs = 5
     random.seed(42)
