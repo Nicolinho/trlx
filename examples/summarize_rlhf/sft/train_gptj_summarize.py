@@ -17,6 +17,10 @@ from peft import LoraConfig, get_peft_model, prepare_model_for_int8_training
 from accelerate import Accelerator
 
 from ray import tune
+import os
+
+os.environ["WANDB_PROJECT"] = "auto_rlhf"
+
 
 def set_seed(seed_val=42):
     random.seed(seed_val)
@@ -198,4 +202,4 @@ if __name__ == "__main__":
 
     #
     trainer.train()
-    # trainer.save_model(output_dir)
+    trainer.save_model(output_dir)
