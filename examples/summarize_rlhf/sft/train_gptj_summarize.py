@@ -30,9 +30,9 @@ def set_seed(seed_val=42):
 
 
 if __name__ == "__main__":
-    output_dir = "gptj-supervised-summarize-checkpoint"
-    train_batch_size = 8
-    gradient_accumulation_steps = 4
+    output_dir = "gptj_6B-supervised-summarize-checkpoint"
+    train_batch_size = 1 #8
+    gradient_accumulation_steps = 32 #4
     learning_rate = 1e-5
     eval_batch_size = 1
     eval_steps = 500
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     device_index = Accelerator().process_index
     device_map = {"": device_index}
 
-    model_name = ['facebook/opt-350m', "EleutherAI/gpt-j-6B"][0]
+    model_name = ['facebook/opt-350m', "EleutherAI/gpt-j-6B"][1]
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
