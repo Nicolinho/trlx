@@ -114,9 +114,10 @@ if __name__ == "__main__":
         fp16=True,
         bf16=False,
         learning_rate=1e-5,
-        deepspeed="ds_config_gpt_j.json",
+        # deepspeed="ds_config_gpt_j.json",
         save_total_limit=1,
     )
+
 
     lora_config = LoraConfig(
         r=16,
