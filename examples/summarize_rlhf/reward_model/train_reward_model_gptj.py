@@ -113,6 +113,7 @@ if __name__ == "__main__":
         logging_dir="./logs",
         fp16=True,
         bf16=False,
+        half_precision_backend=True,
         learning_rate=1e-5,
         # deepspeed="ds_config_gpt_j.json",
         save_total_limit=1,
