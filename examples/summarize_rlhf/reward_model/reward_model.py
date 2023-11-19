@@ -5,9 +5,9 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import LoraConfig, get_peft_model
 
 class GPTRewardModel(nn.Module):
-    def __init__(self, model_path, load_in_8bit=False, peft_config=None):
+    def __init__(self, model_path, load_in_8bit=False, peft_config=None, device_map=None):
         super().__init__()
-        model = AutoModelForCausalLM.from_pretrained(model_path, load_in_8bit=load_in_8bit)
+        model = AutoModelForCausalLM.from_pretrained(model_path, load_in_8bit=load_in_8bit, device_map=device_map)
         if peft_config is not None:
             model = get_peft_model(model, peft_config)
         self.config = model.config

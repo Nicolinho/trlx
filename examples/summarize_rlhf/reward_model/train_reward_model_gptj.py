@@ -8,6 +8,9 @@ from tqdm import tqdm
 from transformers import AutoTokenizer, Trainer, TrainingArguments
 
 from peft import LoraConfig, get_peft_model
+from accelerate import Accelerator
+
+os.environ["WANDB_PROJECT"] = "auto_rlhf"
 
 def create_comparison_dataset(path="CarperAI/openai_summarize_comparisons", split="train"):
     dataset = load_dataset(path, split=split)
@@ -123,9 +126,14 @@ if __name__ == "__main__":
         task_type="CAUSAL_LM",
     )
 
+
+    device_index = Accelerator().process_index
+    device_map = {"": device_index}
+
     # Initialize the reward model from the (supervised) fine-tuned GPT-J
     # model = GPTRewardModel("CarperAI/openai_summarize_tldr_sft", load_in_8bit=True)
-    model = GPTRewardModel("CarperAI/openai_summarize_tldr_sft", load_in_8bit=True, peft_config=lora_config)
+    model = GPTRewardModel("CarperAI/openai_summarize_tldr_sft", load_in_8bit=True, peft_config=lora_config,
+                           device_map=device_map)
 
 
     # Freeze the first 70% of the hidden layers of the reward model backbone
