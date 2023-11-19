@@ -158,6 +158,9 @@ if __name__ == "__main__":
     # Create the collator to gather batches of pairwise comparisons
     data_collator = DataCollatorReward()
 
+    model.is_parallelizable = True
+    model.model_parallel = True
+
     Trainer(
         model=model,
         args=training_args,
