@@ -2,11 +2,14 @@ import torch
 from torch import nn
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
+from peft import LoraConfig, get_peft_model
 
 class GPTRewardModel(nn.Module):
-    def __init__(self, model_path):
+    def __init__(self, model_path, load_in_8bit=False, peft_config=None):
         super().__init__()
-        model = AutoModelForCausalLM.from_pretrained(model_path)
+        model = AutoModelForCausalLM.from_pretrained(model_path, load_in_8bit=load_in_8bit)
+        if peft_config is not None:
+            model = get_peft_model(model, peft_config)
         self.config = model.config
         # `gpt-neo(x)` models use `hidden_size` attribute names instead of `n_embd``
         self.config.n_embd = self.config.hidden_size if hasattr(self.config, "hidden_size") else self.config.n_embd

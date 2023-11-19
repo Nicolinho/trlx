@@ -7,6 +7,7 @@ from torch.utils.data import Dataset
 from tqdm import tqdm
 from transformers import AutoTokenizer, Trainer, TrainingArguments
 
+from peft import LoraConfig, get_peft_model
 
 def create_comparison_dataset(path="CarperAI/openai_summarize_comparisons", split="train"):
     dataset = load_dataset(path, split=split)
@@ -114,8 +115,18 @@ if __name__ == "__main__":
         save_total_limit=1,
     )
 
+    lora_config = LoraConfig(
+        r=16,
+        lora_alpha=32,
+        lora_dropout=0.05,
+        bias="none",
+        task_type="CAUSAL_LM",
+    )
+
     # Initialize the reward model from the (supervised) fine-tuned GPT-J
-    model = GPTRewardModel("CarperAI/openai_summarize_tldr_sft")
+    # model = GPTRewardModel("CarperAI/openai_summarize_tldr_sft", load_in_8bit=True)
+    model = GPTRewardModel("CarperAI/openai_summarize_tldr_sft", load_in_8bit=True, peft_config=lora_config)
+
 
     # Freeze the first 70% of the hidden layers of the reward model backbone
     layers = model.transformer.h
