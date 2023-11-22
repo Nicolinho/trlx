@@ -31,7 +31,7 @@ def set_seed(seed_val=42):
 
 if __name__ == "__main__":
     output_dir = "fb-opt350m-int8"
-    train_batch_size = 4 #8
+    train_batch_size = 1 #8
     gradient_accumulation_steps = 32 #4
     learning_rate = 1e-5
     eval_batch_size = 1
@@ -73,6 +73,11 @@ if __name__ == "__main__":
     model.config.pad_token_id = model.config.eos_token_id
     model = get_peft_model(model, lora_config)
 
+    t = torch.cuda.get_device_properties(0).total_memory
+    r = torch.cuda.memory_reserved(0)
+    a = torch.cuda.memory_allocated(0)
+
+    print(f"total memory {t} | allocated mem: {r} | free mem in reserved: {r-a}")
 
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.pad_token_id = tokenizer.eos_token_id
