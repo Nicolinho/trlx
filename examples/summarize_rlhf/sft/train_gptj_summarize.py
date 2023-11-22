@@ -31,7 +31,7 @@ def set_seed(seed_val=42):
 
 if __name__ == "__main__":
     output_dir = "fb-opt350m-int8"
-    train_batch_size = 1 #8
+    train_batch_size = 2 #8
     gradient_accumulation_steps = 32 #4
     learning_rate = 1e-5
     eval_batch_size = 1
@@ -157,8 +157,8 @@ if __name__ == "__main__":
         learning_rate=learning_rate,
         per_device_train_batch_size=train_batch_size,
         per_device_eval_batch_size=eval_batch_size,
-#        gradient_checkpointing=True,
-        half_precision_backend=True,
+        # gradient_checkpointing=True,
+        # half_precision_backend=True,
 #        fp16=True,
         adam_beta1=0.9,
         adam_beta2=0.95,
