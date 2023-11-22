@@ -67,7 +67,7 @@ if __name__ == "__main__":
     # model = AutoModelForCausalLM.from_pretrained(model_name, use_cache=False,
     #                                              load_in_8bit=True, device_map=device_map, torch_dtype = torch.bfloat16)
     model = AutoModelForCausalLM.from_pretrained(model_name, use_cache=False,
-                                                 load_in_8bit=True, device_map=device_map)
+                                                 load_in_8bit=False, device_map=device_map)
     model.resize_token_embeddings(len(tokenizer))
     model.config.end_token_id = tokenizer.eos_token_id
     model.config.pad_token_id = model.config.eos_token_id
