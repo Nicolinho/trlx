@@ -97,27 +97,7 @@ if __name__ == "__main__":
     if not os.path.exists("rm_checkpoint"):
         os.mkdir("rm_checkpoint")
 
-    training_args = TrainingArguments(
-        output_dir="rm_checkpoint/",
-        num_train_epochs=5,
-        logging_steps=10,
-        gradient_accumulation_steps=4,
-        save_strategy="steps",
-        evaluation_strategy="steps",
-        per_device_train_batch_size=1,
-        per_device_eval_batch_size=1,
-        eval_accumulation_steps=1,
-        eval_steps=500,
-        save_steps=500,
-        warmup_steps=100,
-        logging_dir="./logs",
-        fp16=True,
-        bf16=False,
-        half_precision_backend=True,
-        learning_rate=1e-5,
-        # deepspeed="ds_config_gpt_j.json",
-        save_total_limit=1,
-    )
+
 
 
     lora_config = LoraConfig(
@@ -158,8 +138,43 @@ if __name__ == "__main__":
     # Create the collator to gather batches of pairwise comparisons
     data_collator = DataCollatorReward()
 
-    model.is_parallelizable = True
-    model.model_parallel = True
+    gradient_accumulation_steps = 4
+
+    device_map = "auto"
+    world_size = int(os.environ.get("WORLD_SIZE", 1))
+    ddp = world_size != 1
+    if ddp:
+        device_map = {"": int(os.environ.get("LOCAL_RANK") or 0)}
+        gradient_accumulation_steps = gradient_accumulation_steps // world_size
+        print("updated gradient_accumulation_steps: ", gradient_accumulation_steps)
+
+    if not ddp and torch.cuda.device_count() > 1:
+        # keeps Trainer from trying its own DataParallelism when more than 1 gpu is available through cuda_visible_devices
+        # o/w the batch size is e.g. multiplied with the num of availabel devices
+        model.is_parallelizable = True
+        model.model_parallel = True
+
+    training_args = TrainingArguments(
+        output_dir="rm_checkpoint/",
+        num_train_epochs=5,
+        logging_steps=10,
+        gradient_accumulation_steps=gradient_accumulation_steps,
+        save_strategy="steps",
+        evaluation_strategy="steps",
+        per_device_train_batch_size=1,
+        per_device_eval_batch_size=1,
+        eval_accumulation_steps=1,
+        eval_steps=500,
+        save_steps=500,
+        warmup_steps=100,
+        logging_dir="./logs",
+        fp16=True,
+        bf16=False,
+        half_precision_backend=True,
+        learning_rate=1e-5,
+        # deepspeed="ds_config_gpt_j.json",
+        save_total_limit=1,
+    )
 
     Trainer(
         model=model,

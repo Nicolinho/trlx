@@ -30,16 +30,18 @@ def set_seed(seed_val=42):
 
 
 if __name__ == "__main__":
-    output_dir = "gptj_6B-supervised-summarize-checkpoint"
-    train_batch_size = 1 #8
-    gradient_accumulation_steps = 32 #4
+    output_dir = "fb-opt350m-int8"
+    train_batch_size = 16 #8
+    gradient_accumulation_steps = 8 #4
     learning_rate = 1e-5
     eval_batch_size = 1
     eval_steps = 500
-    max_input_length = 256 #550
+    max_input_length = 512 #550
     save_steps = 1000
     num_train_epochs = 5
     random.seed(42)
+
+    run_name = output_dir
 
     device_map={'':torch.cuda.current_device()}
 #    device_map={'':torch.cuda.current_device()} or device_map={'':torch.xpu.current_device()}
@@ -58,12 +60,14 @@ if __name__ == "__main__":
     device_index = Accelerator().process_index
     device_map = {"": device_index}
 
-    model_name = ['facebook/opt-350m', "EleutherAI/gpt-j-6B"][1]
+    model_name = ['facebook/opt-350m', "EleutherAI/gpt-j-6B"][0]
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
+    # model = AutoModelForCausalLM.from_pretrained(model_name, use_cache=False,
+    #                                              load_in_8bit=True, device_map=device_map, torch_dtype = torch.bfloat16)
     model = AutoModelForCausalLM.from_pretrained(model_name, use_cache=False,
-                                                 load_in_8bit=True, device_map=device_map, torch_dtype = torch.bfloat16)
+                                                 load_in_8bit=True, device_map=device_map)
     model.resize_token_embeddings(len(tokenizer))
     model.config.end_token_id = tokenizer.eos_token_id
     model.config.pad_token_id = model.config.eos_token_id
@@ -110,7 +114,7 @@ if __name__ == "__main__":
         data_path,
         tokenizer,
         # "train",
-        split='train[40%:41%]',
+        split='train[40%:60%]',
         max_length=max_input_length,
     )
 #    train_dataset = train_dataset.map(num_proc=2)
@@ -118,7 +122,7 @@ if __name__ == "__main__":
         data_path,
         tokenizer,
         # "valid",
-        split='valid[40%:41%]',
+        split='valid[40%:60%]',
         max_length=max_input_length,
     )
 
@@ -142,6 +146,7 @@ if __name__ == "__main__":
     # Prepare the trainer and start training
     training_args = TrainingArguments(
         output_dir=output_dir,
+        run_name=run_name,
         evaluation_strategy="steps",
         eval_accumulation_steps=1,
         learning_rate=learning_rate,
