@@ -30,9 +30,9 @@ def set_seed(seed_val=42):
 
 
 if __name__ == "__main__":
-    output_dir = "fb-opt350m-int8"
+    output_dir = "fb-opt350m-fp32"
     train_batch_size = 2 #8
-    gradient_accumulation_steps = 32 #4
+    gradient_accumulation_steps = 8 #4
     learning_rate = 1e-5
     eval_batch_size = 1
     eval_steps = 500
@@ -71,7 +71,9 @@ if __name__ == "__main__":
     model.resize_token_embeddings(len(tokenizer))
     model.config.end_token_id = tokenizer.eos_token_id
     model.config.pad_token_id = model.config.eos_token_id
-    model = get_peft_model(model, lora_config)
+    # model = get_peft_model(model, lora_config)
+    # model.add_adapter(lora_config, 'lora1')
+    # model.enable_adapters() # I think not necassary as done by train loop anyway
 
     t = torch.cuda.get_device_properties(0).total_memory
     r = torch.cuda.memory_reserved(0)
@@ -119,15 +121,15 @@ if __name__ == "__main__":
         data_path,
         tokenizer,
         # "train",
-        split='train[40%:60%]',
+        split='train[0%:50%]',
         max_length=max_input_length,
     )
 #    train_dataset = train_dataset.map(num_proc=2)
     dev_dataset = TLDRDataset(
         data_path,
         tokenizer,
-        # "valid",
-        split='valid[40%:60%]',
+        "valid",
+        # split='valid[40%:60%]',
         max_length=max_input_length,
     )
 
@@ -157,7 +159,7 @@ if __name__ == "__main__":
         learning_rate=learning_rate,
         per_device_train_batch_size=train_batch_size,
         per_device_eval_batch_size=eval_batch_size,
-        gradient_checkpointing=True,
+        # gradient_checkpointing=True,
         # half_precision_backend=True,
 #        fp16=True,
         adam_beta1=0.9,
