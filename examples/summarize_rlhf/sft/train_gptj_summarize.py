@@ -30,7 +30,7 @@ def set_seed(seed_val=42):
 
 
 if __name__ == "__main__":
-    output_dir = "fb-opt350m-fp32-lora"
+    output_dir = "fb-opt350m-fp32-lora-fullds"
     train_batch_size = 2 #8
     gradient_accumulation_steps = 8 #4
     learning_rate = 1e-5
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     model.config.end_token_id = tokenizer.eos_token_id
     model.config.pad_token_id = model.config.eos_token_id
     # model = get_peft_model(model, lora_config)
-    model.add_adapter(lora_config, 'lora1')
+    # model.add_adapter(lora_config, 'lora1')
     # model.enable_adapters() # I think not necassary as done by train loop anyway
 
     t = torch.cuda.get_device_properties(0).total_memory
@@ -120,8 +120,8 @@ if __name__ == "__main__":
     train_dataset = TLDRDataset(
         data_path,
         tokenizer,
-        # "train",
-        split='train[0%:50%]',
+        "train",
+        # split='train[0%:50%]',
         max_length=max_input_length,
     )
 #    train_dataset = train_dataset.map(num_proc=2)
